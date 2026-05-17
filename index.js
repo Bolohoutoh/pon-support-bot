@@ -161,7 +161,7 @@ client.on('interactionCreate', async interaction => {
             await suggestionMsg.react('⬇️');
             if (interaction.message) await interaction.message.delete().catch(() => {});
 
-            const panelEmbed = new EmbedBuilder().setColor('#2F3136').setTitle('💡 PIONEER IDEAS & SUGGESTIONS').setDescription('Have a thought that could make **Pioneer Outpost Nusa** even greater? Share it with the community!\n\n• Click the button below to submit your suggestion.\n• The community can vote using ⬆️ and ⬇️ reactions.\n• Highly voted ideas will be reviewed and possibly implemented by the Outpost Commanders.\n\n*Help us build a better world!*').setImage('https://i.imgur.com/feJtRAt.gif'); 
+            const panelEmbed = new EmbedBuilder().setColor('#2F3136').setTitle('💡 PIONEER IDEAS & SUGGESTIONS').setDescription('Have a thought that could make **Pioneer Outpost Nusa** even greater? Share it with the community!\n\n• Click the button below to submit your suggestion.\n• The community can vote using ⬆️ and ⬇️ reactions.\n• Highly voted ideas will be reviewed and possibly implemented by the Outpost Commanders.\n\n*Help us build a better world!*').setImage('https://i.imgur.com/feJtRAt.gif');
             const btn = new ButtonBuilder().setCustomId('create_suggestion').setLabel('CREATE SUGGESTION').setStyle(ButtonStyle.Primary).setEmoji('📝');
             await interaction.channel.send({ embeds: [panelEmbed], components: [new ActionRowBuilder().addComponents(btn)] });
             await interaction.reply({ content: `✅ Your suggestion has been sent to ${targetChannel}!`, ephemeral: true });
@@ -180,7 +180,7 @@ client.on('interactionCreate', async interaction => {
     const isRealAdmin = interaction.member ? interaction.member.permissions.has(PermissionFlagsBits.ManageGuild) : false;
     const isCustomAdmin = settings[interaction.guild.id].authorizedUsers.includes(interaction.user.id);
 
-    try { await command.executeSlash(interaction, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); } 
+    try { await command.executeSlash(interaction, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); }
     catch (error) { console.error(error); }
 });
 
@@ -192,23 +192,23 @@ client.on('messageCreate', async message => {
     let afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'));
     let afkChanged = false;
 
-    // 1. Cek jika member yang AFK mulai nge-chat (Hapus AFK-nya)
+    // 1. Cek jika member yang AFK mulai nge-chat (Hapus AFK-nya tanpa mode reply)
     if (afkData[guildId] && afkData[guildId][message.author.id]) {
         delete afkData[guildId][message.author.id];
         afkChanged = true;
-        // Kirim pesan sambutan dan otomatis hapus pesannya dalam 5 detik agar tidak nyampah
-        message.reply(`👋 Welcome back **${message.member.displayName}**, I removed your AFK.`)
+        // Diubah menggunakan channel.send biasa
+        message.channel.send(`👋 Welcome back **${message.member.displayName}**, I removed your AFK.`)
             .then(msg => setTimeout(() => msg.delete().catch(()=>{}), 5000));
     }
 
-    // 2. Cek jika pesan ini me-mention (tag) orang yang sedang AFK
+    // 2. Cek jika pesan ini me-mention (tag) orang yang sedang AFK (Tanpa mode reply)
     if (message.mentions.users.size > 0 && afkData[guildId]) {
         message.mentions.users.forEach(user => {
             if (afkData[guildId][user.id]) {
                 const afkInfo = afkData[guildId][user.id];
-                // Hitung waktu (Timestamp Discord)
                 const timeAgo = Math.floor(afkInfo.timestamp / 1000);
-                message.reply(`💤 **${user.username}** is AFK: ${afkInfo.reason} *(since <t:${timeAgo}:R>)*`);
+                // Diubah menggunakan channel.send biasa
+                message.channel.send(`💤 **${user.username}** is AFK: ${afkInfo.reason} *(since <t:${timeAgo}:R>)*`);
             }
         });
     }
@@ -232,7 +232,10 @@ client.on('messageCreate', async message => {
     const isRealAdmin = message.member ? message.member.permissions.has(PermissionFlagsBits.ManageGuild) : false;
     const isCustomAdmin = settings[message.guild.id].authorizedUsers.includes(message.author.id);
 
-    try { await command.executePrefix(message, args, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); } 
+    // 🔥 TRIK PEMBAJAKAN UTAMA: Mengubah semua .reply di file commands/ menjadi channel.send otomatis khusus tipe Prefix
+    message.reply = (content) => message.channel.send(content);
+
+    try { await command.executePrefix(message, args, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); }
     catch (error) { console.error(error); }
 });
 
