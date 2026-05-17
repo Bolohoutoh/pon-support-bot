@@ -68,6 +68,8 @@ function checkDatabase(guildId) {
 
 // ==================== INTERACTION HANDLER ====================
 client.on('interactionCreate', async interaction => {
+    
+    // PENANGANAN MENU TICKET
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_menu') {
         const reason = interaction.values[0];
         const member = interaction.member;
@@ -102,6 +104,7 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
+    // PENANGANAN TOMBOL TUTUP TICKET
     if (interaction.isButton() && interaction.customId === 'close_ticket') {
         try {
             await interaction.reply('🔒 Securing data logs and dismantling channel in 5 seconds...');
@@ -136,6 +139,7 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
+    // PENANGANAN TOMBOL SUGGESTION
     if (interaction.isButton() && interaction.customId === 'create_suggestion') {
         const modal = new ModalBuilder().setCustomId('suggestion_modal').setTitle('Submit a Suggestion');
         const suggestionInput = new TextInputBuilder().setCustomId('suggestion_text').setLabel("What is your idea?").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000);
@@ -144,6 +148,7 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
+    // PENANGANAN MODAL SUGGESTION
     if (interaction.isModalSubmit() && interaction.customId === 'suggestion_modal') {
         const suggestionText = interaction.fields.getTextInputValue('suggestion_text');
         const guildId = interaction.guild.id;
@@ -172,6 +177,91 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
+    // ==================== DROPDOWN HELP MENU SYSTEM ====================
+    if (interaction.isStringSelectMenu() && interaction.customId === 'help_menu') {
+        const selection = interaction.values[0];
+        const embed = new EmbedBuilder().setTimestamp();
+        const p = PREFIX; 
+
+        // Membaca database emoji kustom
+        const emojisPath = path.join(__dirname, 'emojis.json');
+        let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠️' };
+        if (fs.existsSync(emojisPath)) emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
+
+        // Fungsi pembantu agar emoji custom terbaca di judul (Title) Embed
+        const getEmoji = (emojiStr, fallback) => {
+            const match = emojiStr.match(/\d+/);
+            if (match && interaction.guild) {
+                const guildEmoji = interaction.guild.emojis.cache.get(match[0]);
+                if (guildEmoji) return guildEmoji.toString();
+            }
+            return fallback;
+        };
+
+        switch (selection) {
+            case 'help_main':
+                embed.setColor('#77B255')
+                    .setTitle('🏕️ PIONEER OUTPOST HELP PANEL')
+                    .setDescription('Welcome Explorer! Select a category from the dropdown menu below to view available commands and server configurations.')
+                    .addFields(
+                        { name: `${emojis.help_general || '🧭'} General`, value: 'Basic bot interactions, user utilities, and AFK systems.', inline: true },
+                        { name: `${emojis.help_profile || '👤'} Profile`, value: 'View player statistics, titles, badges, and server rank. *(Coming Soon)*', inline: true },
+                        { name: `${emojis.help_management || '🧱'} Ch Management & Welcome`, value: 'Tools for channel, role, locks, and custom greetings setup.', inline: true },
+                        { name: `${emojis.help_support || '🛠️'} Support & Utilities`, value: 'Setup support tickets, community suggestions, and bot access.', inline: true }
+                    )
+                    .setFooter({ text: 'Pioneer Support • Choose a category below' });
+                break;
+
+            case 'help_general':
+                embed.setColor('#3498DB')
+                    .setTitle(`${getEmoji(emojis.help_general, '🧭')} GENERAL BOT COMMANDS`)
+                    .setDescription('Here are the basic commands available for all server members:')
+                    .addFields(
+                        { name: `\`${p} afk [reason]\``, value: 'Set your status to Away From Keyboard (AFK).' },
+                        { name: `\`${p} info\``, value: 'View bot statistics, current ping, and system uptime.' },
+                        { name: `\`${p} avatar [user]\``, value: 'Display your own or another member\'s high-resolution avatar.' },
+                        { name: `\`${p} vote\``, value: 'Support our outpost by voting for the bot on community lists.' }
+                    )
+                    .setFooter({ text: 'Category: General Commands' });
+                break;
+
+            case 'help_profile':
+                embed.setColor('#9B59B6')
+                    .setTitle(`${getEmoji(emojis.help_profile, '👤')} PLAYER PROFILE SYSTEM`)
+                    .setDescription('📋 **STATUS: COMING SOON**\n\nThis feature is currently under heavy development by the Outpost Commanders.\n\nSoon you will be able to earn customized **Badges**, unlock legendary **Titles**, level up by chatting, and compete on the global server **Leaderboard**!')
+                    .setFooter({ text: 'Category: Profile & Ranks' });
+                break;
+
+            case 'help_management':
+                embed.setColor('#E67E22')
+                    .setTitle(`${getEmoji(emojis.help_management, '🧱')} CH MANAGEMENT & WELCOME SETUP`)
+                    .setDescription('Configuration commands to control, structure channels, and setup greetings:')
+                    .addFields(
+                        { name: '🧱 Channel & Role Management', value: `\`${p} crt cha [name]\` - Create text channel.\n\`${p} crt cat [name]\` - Create category folder.\n\`${p} crt role [hex] [name]\` - Create custom colored role.\n\`${p} rmv [cha/cat/role]\` - Delete channel/category/role.\n\`${p} rmv msg [amount]\` - Clear chat messages.\n\`${p} lock / unlock [channel]\` - Toggle channel locks.\n\`${p} slowmode [channel] [seconds]\` - Set slowmode cooldown.` },
+                        { name: '👋 Welcome Greeting Configurations', value: `\`${p} set wcm [#channel]\` - Set target welcome channel.\n\`${p} wcm gif [imgur_link]\` - Pool custom background Imgur GIF.\n\`${p} wcm list\` - View registered welcome GIFs.\n\`${p} wcm rmv [num]\` - Remove custom GIF from database.` }
+                    )
+                    .setFooter({ text: 'Category: Management & Welcome (Admin Only)' });
+                break;
+
+            case 'help_support':
+                embed.setColor('#F1C40F')
+                    .setTitle(`${getEmoji(emojis.help_support, '🛠️')} SUPPORT & UTILITIES PANEL`)
+                    .setDescription('Core configuration tools for advanced system modules:')
+                    .addFields(
+                        { name: `\`${p} set log [#channel]\``, value: 'Set the secure archive log channel for closed tickets.' },
+                        { name: `\`${p} set sug [#channel]\``, value: 'Set the main display channel for community suggestion logs.' },
+                        { name: `\`${p} suggestion\``, value: 'Deploy the automated, click-to-submit Suggestion Embed Panel.' },
+                        { name: `\`${p} access add / rmv [@user]\``, value: 'Grant or revoke custom custom admin permissions to run bot commands.' },
+                        { name: `\`${p} access list\``, value: 'Display all authorized custom bot administrators.' }
+                    )
+                    .setFooter({ text: 'Category: Support & Utilities (Admin Only)' });
+                break;
+        }
+
+        await interaction.update({ embeds: [embed] });
+        return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
@@ -196,7 +286,6 @@ client.on('messageCreate', async message => {
     if (afkData[guildId] && afkData[guildId][message.author.id]) {
         delete afkData[guildId][message.author.id];
         afkChanged = true;
-        // Diubah menggunakan channel.send biasa
         message.channel.send(`👋 Welcome back **${message.member.displayName}**, I removed your AFK.`)
             .then(msg => setTimeout(() => msg.delete().catch(()=>{}), 5000));
     }
@@ -207,7 +296,6 @@ client.on('messageCreate', async message => {
             if (afkData[guildId][user.id]) {
                 const afkInfo = afkData[guildId][user.id];
                 const timeAgo = Math.floor(afkInfo.timestamp / 1000);
-                // Diubah menggunakan channel.send biasa
                 message.channel.send(`💤 **${user.username}** is AFK: ${afkInfo.reason} *(since <t:${timeAgo}:R>)*`);
             }
         });
@@ -232,7 +320,7 @@ client.on('messageCreate', async message => {
     const isRealAdmin = message.member ? message.member.permissions.has(PermissionFlagsBits.ManageGuild) : false;
     const isCustomAdmin = settings[message.guild.id].authorizedUsers.includes(message.author.id);
 
-    // 🔥 TRIK PEMBAJAKAN UTAMA: Mengubah semua .reply di file commands/ menjadi channel.send otomatis khusus tipe Prefix
+    // 🔥 TRIK PEMBAJAKAN UTAMA: Mengubah semua .reply menjadi channel.send otomatis khusus tipe Prefix
     message.reply = (content) => message.channel.send(content);
 
     try { await command.executePrefix(message, args, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); }
