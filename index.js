@@ -200,7 +200,7 @@ client.on('interactionCreate', async interaction => {
 
         switch (selection) {
             case 'help_main':
-                embed.setColor('#77B255')
+                embed.setColor('#2F3136')
                     .setTitle('🏕️ PIONEER OUTPOST HELP PANEL')
                     .setDescription('Welcome Explorer! Select a category from the dropdown menu below to view available commands and server configurations.')
                     .addFields(
@@ -213,7 +213,7 @@ client.on('interactionCreate', async interaction => {
                 break;
 
             case 'help_general':
-                embed.setColor('#3498DB')
+                embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_general, '🧭')} GENERAL BOT COMMANDS`)
                     .setDescription('Here are the basic commands available for all server members:')
                     .addFields(
@@ -226,14 +226,14 @@ client.on('interactionCreate', async interaction => {
                 break;
 
             case 'help_profile':
-                embed.setColor('#9B59B6')
+                embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_profile, '👤')} PLAYER PROFILE SYSTEM`)
                     .setDescription('📋 **STATUS: COMING SOON**\n\nThis feature is currently under heavy development by the Outpost Commanders.\n\nSoon you will be able to earn customized **Badges**, unlock legendary **Titles**, level up by chatting, and compete on the global server **Leaderboard**!')
                     .setFooter({ text: 'Category: Profile & Ranks' });
                 break;
 
             case 'help_management':
-                embed.setColor('#E67E22')
+                embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_management, '🧱')} CH MANAGEMENT & WELCOME SETUP`)
                     .setDescription('Configuration commands to control, structure channels, and setup greetings:')
                     .addFields(
@@ -244,7 +244,7 @@ client.on('interactionCreate', async interaction => {
                 break;
 
             case 'help_support':
-                embed.setColor('#F1C40F')
+                embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_support, '🛠️')} SUPPORT & UTILITIES PANEL`)
                     .setDescription('Core configuration tools for advanced system modules:')
                     .addFields(

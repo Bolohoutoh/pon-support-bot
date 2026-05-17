@@ -19,7 +19,17 @@ module.exports = {
             emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
         }
 
-        // EMBED UTAMA (HALAMAN DEPAN)
+        // 🛠️ FILTER PINTAR: Mengambil ID angka saja khusus untuk Dropdown Menu
+        const getComponentEmoji = (emojiStr) => {
+            if (!emojiStr) return undefined;
+            if (emojiStr.startsWith('<')) {
+                const match = emojiStr.match(/\d+/);
+                return match ? match[0] : emojiStr;
+            }
+            return emojiStr; // Kalau emoji biasa (bawaan HP), kembalikan seperti biasa
+        };
+
+        // EMBED UTAMA (Teks bebas pakai format lengkap)
         const mainEmbed = new EmbedBuilder()
             .setColor('#77B255')
             .setTitle('🏕️ PIONEER OUTPOST HELP PANEL')
@@ -33,7 +43,7 @@ module.exports = {
             .setFooter({ text: 'Pioneer Support • Choose a category below' })
             .setTimestamp();
 
-        // MEMBUAT DROPDOWN MENU DENGAN EMOJI KUSTOM
+        // MEMBUAT DROPDOWN MENU (Menggunakan filter ID)
         const menu = new StringSelectMenuBuilder()
             .setCustomId('help_menu')
             .setPlaceholder('Select help category...')
@@ -42,31 +52,31 @@ module.exports = {
                     label: 'Main Menu',
                     description: 'Back to the main help dashboard',
                     value: 'help_main',
-                    emoji: emojis.help_main || '🏕️'
+                    emoji: getComponentEmoji(emojis.help_main || '🏕️')
                 },
                 {
                     label: 'General Commands',
                     description: 'View basic commands like AFK, Avatar, Vote, etc.',
                     value: 'help_general',
-                    emoji: emojis.help_general || '🧭'
+                    emoji: getComponentEmoji(emojis.help_general || '🧭')
                 },
                 {
                     label: 'Profile System',
                     description: 'View badges, titles, and leaderboards (Coming Soon)',
                     value: 'help_profile',
-                    emoji: emojis.help_profile || '👤'
+                    emoji: getComponentEmoji(emojis.help_profile || '👤')
                 },
                 {
                     label: 'Ch Management & Welcome',
                     description: 'Manage channels, roles, locks, and welcome setup',
                     value: 'help_management',
-                    emoji: emojis.help_management || '🧱'
+                    emoji: getComponentEmoji(emojis.help_management || '🧱')
                 },
                 {
                     label: 'Support & Utilities',
                     description: 'Configure tickets, suggestions, and admin rights',
                     value: 'help_support',
-                    emoji: emojis.help_support || '🛠️'
+                    emoji: getComponentEmoji(emojis.help_support || '🛠️')
                 }
             ]);
 
