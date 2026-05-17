@@ -21,7 +21,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor('#2F3136') // Warna abu-abu elegan menyatu dengan Discord
             .setTitle('SUPPORT TICKET🔒')
-            .setDescription('Welcome to the Support Desk. Please review the protocols before firing a distress signal.\n\n**BEFORE YOU DEPLOY A TICKET:**\n❌ - Ensure your issue hasn\'t been answered in `#faq` or `#guidelines`.\n❌ - Do not misuse this beacon. False alarms (trolling) will result in immediate exile to the wild.\n\n**EMERGENCY TYPES:**\n1️⃣ : Bug / System Anomaly\n2️⃣ : Report a Rogue Pioneer (Player)\n3️⃣ : Appeal Exile (Ban Appeal)\n4️⃣ : General Outpost Support\n\n*An Outpost Commander will respond as soon as the perimeter is secure.*')
+            .setDescription('-# Follow The Rules.\n\n**BEFORE YOU DEPLOY A TICKET:**\n❌ - Ensure your issue hasn\'t been answered in `#faq` or `#guidelines`.\n❌ - Do not misuse this beacon. False alarms (trolling) will result in immediate exile to the wild.\n\n**EMERGENCY TYPES:**\n1️⃣ : Bug / System Anomaly\n2️⃣ : Report a Rogue Pioneer (Player)\n3️⃣ : Appeal Exile (Ban Appeal)\n4️⃣ : General Outpost Support\n\n*An Outpost Commander will respond as soon as the perimeter is secure.*')
             .setThumbnail(serverIcon); // Memasang icon server di sini
 
         const selectMenu = new StringSelectMenuBuilder()
