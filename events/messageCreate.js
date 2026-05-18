@@ -1,7 +1,7 @@
 const { Events, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const fs = require('fs');
-const { PREFIX, SETTINGS_FILE, AFK_FILE } = require('../config');
-const { checkDatabase } = require('../utils/database');
+const { PREFIX, AFK_FILE, SETTINGS_FILE } = require('../config');
+const { checkDatabase, saveSettings } = require('../utils/database');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -9,12 +9,8 @@ module.exports = {
         if (message.author.bot || !message.guild) return;
 
         // ==================== AUTOMOD ====================
-        let settings = {};
-        if (fs.existsSync(SETTINGS_FILE)) {
-            settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
-        }
-
         const guildId  = message.guild.id;
+        const settings = checkDatabase(guildId);
         const badWords = settings[guildId]?.badWords || [];
         const content  = message.content.toLowerCase();
 
@@ -36,7 +32,7 @@ module.exports = {
             if (!settings[guildId].caseCount) settings[guildId].caseCount = 0;
             settings[guildId].caseCount += 1;
             const caseId = settings[guildId].caseCount.toString().padStart(6, '0');
-            fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+            saveSettings(settings);
 
             const logEmbed = new EmbedBuilder()
                 .setColor('#ED4245')
@@ -113,8 +109,8 @@ module.exports = {
 
         // ==================== PREFIX COMMAND DISPATCH ====================
         const originalTrimmed = message.content.trim();
-        const contentLower = originalTrimmed.toLowerCase();
-        if (!contentLower.startsWith(PREFIX.toLowerCase())) return;
+        const contentLower2 = originalTrimmed.toLowerCase();
+        if (!contentLower2.startsWith(PREFIX.toLowerCase())) return;
 
         const args = originalTrimmed.slice(PREFIX.length).trim().split(/\s+/);
         if (args.length === 0) return;
@@ -123,11 +119,12 @@ module.exports = {
         const command = client.commands.get(commandName);
         if (!command) return;
 
-        const guildSettings = checkDatabase(message.guild.id);
+        // Reuse settings yang sudah di-load di atas
+        const guildSettings = settings;
         const isRealAdmin = message.member
             ? message.member.permissions.has(PermissionFlagsBits.ManageGuild)
             : false;
-        const isCustomAdmin = guildSettings[message.guild.id].authorizedUsers.includes(message.author.id);
+        const isCustomAdmin = guildSettings[guildId].authorizedUsers.includes(message.author.id);
 
         // Trik: paksa .reply jadi channel.send untuk command prefix
         message.reply = (content) => message.channel.send(content);

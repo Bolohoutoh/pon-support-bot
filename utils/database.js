@@ -47,4 +47,13 @@ function checkDatabase(guildId) {
     return settings;
 }
 
-module.exports = { initDatabase, checkDatabase };
+/**
+ * Simpan settings ke disk secara aman (atomic write).
+ */
+function saveSettings(settings) {
+    const tmpFile = SETTINGS_FILE + '.tmp';
+    fs.writeFileSync(tmpFile, JSON.stringify(settings, null, 2));
+    fs.renameSync(tmpFile, SETTINGS_FILE);
+}
+
+module.exports = { initDatabase, checkDatabase, saveSettings };
