@@ -12,7 +12,7 @@ module.exports = {
     async sendDog(ctx, type) {
         try {
             // Mengambil gambar dari API gratis Dog.ceo
-            const response = await fetch('https://dog.ceo/api/breeds/image/random');
+            const response = await fetch('https://dog.ceo/api/breeds/image/random', { signal: AbortSignal.timeout(8000) });
             const data = await response.json();
             const imageUrl = data.message;
 

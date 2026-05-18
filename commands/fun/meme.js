@@ -12,7 +12,7 @@ module.exports = {
     async sendMeme(ctx, type) {
         try {
             // Mengambil meme acak dari Meme API (sumber: Reddit)
-            const response = await fetch('https://meme-api.com/gimme');
+            const response = await fetch('https://meme-api.com/gimme', { signal: AbortSignal.timeout(8000) });
             const data = await response.json();
 
             const embed = new EmbedBuilder()

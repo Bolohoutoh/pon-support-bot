@@ -1,6 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 const fs = require('fs');
-const path = require('path');
+const { EMOJIS_FILE } = require('../../config');
 
 module.exports = {
     name: 'help',
@@ -13,10 +13,9 @@ module.exports = {
 
     async sendHelpMenu(ctx, type) {
         // Membaca file emoji kustom terpisah
-        const emojisPath = path.join(__dirname, '../../emojis.json');
         let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠️' };
-        if (fs.existsSync(emojisPath)) {
-            emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
+        if (fs.existsSync(EMOJIS_FILE)) {
+            emojis = JSON.parse(fs.readFileSync(EMOJIS_FILE, 'utf8'));
         }
 
         // 🛠️ FILTER PINTAR: Mengambil ID angka saja khusus untuk Dropdown Menu
