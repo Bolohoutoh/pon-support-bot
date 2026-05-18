@@ -1,5 +1,9 @@
 require('dotenv').config();
-const { Client, GatewayIntentBits, PermissionFlagsBits, Collection, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType } = require('discord.js');
+const { 
+    Client, GatewayIntentBits, PermissionFlagsBits, Collection, ChannelType, 
+    EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, 
+    ModalBuilder, TextInputBuilder, TextInputStyle, ActivityType 
+} = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
@@ -14,21 +18,41 @@ const client = new Client({
 
 const PREFIX = 'pon';
 const SETTINGS_FILE = './serverSettings.json';
-const AFK_FILE = './afk.json'; // Database baru untuk AFK
+const AFK_FILE = './afk.json';
 
 client.commands = new Collection();
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
-for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
-    if ('name' in command) client.commands.set(command.name, command);
+// ==================== COMMAND HANDLER ====================
+const commandsPath = path.join(__dirname, 'commands');
+if (fs.existsSync(commandsPath)) {
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    for (const file of commandFiles) {
+        const filePath = path.join(commandsPath, file);
+        const command = require(filePath);
+        if ('name' in command) client.commands.set(command.name, command);
+    }
 }
 
+// ==================== EVENT HANDLER (BARU) ====================
+const eventsPath = path.join(__dirname, 'events');
+if (fs.existsSync(eventsPath)) {
+    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+    for (const file of eventFiles) {
+        const filePath = path.join(eventsPath, file);
+        const event = require(filePath);
+        if (event.once) {
+            client.once(event.name, (...args) => event.execute(...args, client));
+        } else {
+            client.on(event.name, (...args) => event.execute(...args, client));
+        }
+    }
+}
+
+// DATABASE INITIALIZATION
 if (!fs.existsSync(SETTINGS_FILE)) fs.writeFileSync(SETTINGS_FILE, JSON.stringify({}));
 if (!fs.existsSync(AFK_FILE)) fs.writeFileSync(AFK_FILE, JSON.stringify({}));
 
+// ==================== READY EVENT ====================
 client.once('clientReady', () => {
     console.log(`Success! Bot ${client.user.tag} is online & ready!`);
     client.user.setActivity({
@@ -38,6 +62,7 @@ client.once('clientReady', () => {
     });
 });
 
+// ==================== WELCOME HANDLER ====================
 const welcomeHandler = require('./commands/welcome.js');
 client.on('guildMemberAdd', async member => {
     if (welcomeHandler.handleWelcome) await welcomeHandler.handleWelcome(member, SETTINGS_FILE);
@@ -46,35 +71,46 @@ client.on('guildMemberAdd', async member => {
 function checkDatabase(guildId) {
     const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
     let changed = false;
+    
     if (!settings[guildId] || typeof settings[guildId] === 'string') {
-        settings[guildId] = { channelId: typeof settings[guildId] === 'string' ? settings[guildId] : null, gifs: [], authorizedUsers: [], logChannelId: null, suggestionChannelId: null };
+        settings[guildId] = { 
+            channelId: typeof settings[guildId] === 'string' ? settings[guildId] : null, 
+            gifs: [], 
+            authorizedUsers: [], 
+            logChannelId: null, 
+            suggestionChannelId: null 
+        };
         changed = true;
     }
+    
     if (!Array.isArray(settings[guildId].authorizedUsers)) {
         settings[guildId].authorizedUsers = [];
         changed = true;
     }
+    
     if (settings[guildId].logChannelId === undefined) {
         settings[guildId].logChannelId = null;
         changed = true;
     }
+    
     if (settings[guildId].suggestionChannelId === undefined) {
         settings[guildId].suggestionChannelId = null;
         changed = true;
     }
+    
     if (changed) fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
     return settings;
 }
 
 // ==================== INTERACTION HANDLER ====================
 client.on('interactionCreate', async interaction => {
-
+    
     // PENANGANAN MENU TICKET
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_menu') {
         const reason = interaction.values[0];
         const member = interaction.member;
         const guild = interaction.guild;
-
+        
         try {
             const ticketChannel = await guild.channels.create({
                 name: `ticket-${member.user.username}`,
@@ -85,6 +121,7 @@ client.on('interactionCreate', async interaction => {
                     { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ReadMessageHistory] }
                 ]
             });
+            
             await interaction.reply({ content: `✅ Signal received! Head over to your private channel: ${ticketChannel}`, ephemeral: true });
 
             const ticketEmbed = new EmbedBuilder()
@@ -92,7 +129,7 @@ client.on('interactionCreate', async interaction => {
                 .setTitle('🏕️ DISTRESS SIGNAL OPENED')
                 .setDescription(`Welcome to your private channel, <@${member.id}>.\n\n**Category:** ${reason.toUpperCase()}\n\nPlease describe your issue clearly and provide any evidence/screenshots if needed. An Outpost Commander will be with you shortly.`)
                 .setFooter({ text: 'Press the lock button below to close this ticket.' });
-
+                
             const closeBtn = new ButtonBuilder().setCustomId('close_ticket').setLabel('Close Ticket & Save Log').setStyle(ButtonStyle.Danger).setEmoji('🔒');
             const btnRow = new ActionRowBuilder().addComponents(closeBtn);
 
@@ -127,7 +164,11 @@ client.on('interactionCreate', async interaction => {
             if (logChannelId) {
                 const logChannel = interaction.guild.channels.cache.get(logChannelId);
                 if (logChannel) {
-                    const embedLog = new EmbedBuilder().setColor('#2F3136').setTitle('🎫 TICKET CLOSED & LOGGED').setDescription(`**Ticket:** ${channel.name}\n**Closed By:** <@${interaction.user.id}>`).setTimestamp();
+                    const embedLog = new EmbedBuilder()
+                        .setColor('#2F3136')
+                        .setTitle('🎫 TICKET CLOSED & LOGGED')
+                        .setDescription(`**Ticket:** ${channel.name}\n**Closed By:** <@${interaction.user.id}>`)
+                        .setTimestamp();
                     await logChannel.send({ embeds: [embedLog], files: [attachment] });
                 }
             }
@@ -142,12 +183,18 @@ client.on('interactionCreate', async interaction => {
     // PENANGANAN TOMBOL SUGGESTION
     if (interaction.isButton() && interaction.customId === 'create_suggestion') {
         const modal = new ModalBuilder().setCustomId('suggestion_modal').setTitle('Submit a Suggestion');
-        const suggestionInput = new TextInputBuilder().setCustomId('suggestion_text').setLabel("What is your idea?").setStyle(TextInputStyle.Paragraph).setRequired(true).setMaxLength(1000);
+        const suggestionInput = new TextInputBuilder()
+            .setCustomId('suggestion_text')
+            .setLabel("What is your idea?")
+            .setStyle(TextInputStyle.Paragraph)
+            .setRequired(true)
+            .setMaxLength(1000);
+            
         modal.addComponents(new ActionRowBuilder().addComponents(suggestionInput));
         await interaction.showModal(modal);
         return;
     }
-
+    
     // PENANGANAN MODAL SUGGESTION
     if (interaction.isModalSubmit() && interaction.customId === 'suggestion_modal') {
         const suggestionText = interaction.fields.getTextInputValue('suggestion_text');
@@ -158,7 +205,12 @@ client.on('interactionCreate', async interaction => {
 
         if (!targetChannel) return interaction.reply({ content: '❌ Target channel error!', ephemeral: true });
 
-        const suggestionEmbed = new EmbedBuilder().setColor('#FEE75C').setAuthor({ name: `${interaction.user.tag} suggests:`, iconURL: interaction.user.displayAvatarURL() }).setDescription(`**Suggestion:**\n${suggestionText}`).setTimestamp().setFooter({ text: 'Vote below! ⬆️ for Yes, ⬇️ for No' });
+        const suggestionEmbed = new EmbedBuilder()
+            .setColor('#FEE75C')
+            .setAuthor({ name: `${interaction.user.tag} suggests:`, iconURL: interaction.user.displayAvatarURL() })
+            .setDescription(`**Suggestion:**\n${suggestionText}`)
+            .setTimestamp()
+            .setFooter({ text: 'Vote below! ⬆️ for Yes, ⬇️ for No' });
 
         try {
             const suggestionMsg = await targetChannel.send({ embeds: [suggestionEmbed] });
@@ -166,7 +218,12 @@ client.on('interactionCreate', async interaction => {
             await suggestionMsg.react('⬇️');
             if (interaction.message) await interaction.message.delete().catch(() => {});
 
-            const panelEmbed = new EmbedBuilder().setColor('#2F3136').setTitle('💡 PIONEER IDEAS & SUGGESTIONS').setDescription('Have a thought that could make **Pioneer Outpost Nusa** even greater? Share it with the community!\n\n• Click the button below to submit your suggestion.\n• The community can vote using ⬆️ and ⬇️ reactions.\n• Highly voted ideas will be reviewed and possibly implemented by the Outpost Commanders.\n\n*Help us build a better world!*').setImage('https://i.imgur.com/feJtRAt.gif');
+            const panelEmbed = new EmbedBuilder()
+                .setColor('#2F3136')
+                .setTitle('💡 PIONEER IDEAS & SUGGESTIONS')
+                .setDescription('Have a thought that could make **Pioneer Outpost Nusa** even greater? Share it with the community!\n\n• Click the button below to submit your suggestion.\n• The community can vote using ⬆️ and ⬇️ reactions.\n• Highly voted ideas will be reviewed and possibly implemented by the Outpost Commanders.\n\n*Help us build a better world!*')
+                .setImage('https://i.imgur.com/feJtRAt.gif');
+                
             const btn = new ButtonBuilder().setCustomId('create_suggestion').setLabel('CREATE SUGGESTION').setStyle(ButtonStyle.Primary).setEmoji('📝');
             await interaction.channel.send({ embeds: [panelEmbed], components: [new ActionRowBuilder().addComponents(btn)] });
             await interaction.reply({ content: `✅ Your suggestion has been sent to ${targetChannel}!`, ephemeral: true });
@@ -182,12 +239,12 @@ client.on('interactionCreate', async interaction => {
         const selection = interaction.values[0];
         const embed = new EmbedBuilder().setTimestamp();
         const p = PREFIX;
-
+        
         // Membaca database emoji kustom
         const emojisPath = path.join(__dirname, 'emojis.json');
         let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠️' };
         if (fs.existsSync(emojisPath)) emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
-
+        
         // Fungsi pembantu agar emoji custom terbaca di judul (Title) Embed
         const getEmoji = (emojiStr, fallback) => {
             const match = emojiStr.match(/\d+/);
@@ -221,8 +278,8 @@ client.on('interactionCreate', async interaction => {
                         { name: `\`${p} info\``, value: 'View bot statistics, current ping, and system uptime.' },
                         { name: `\`${p} avatar [user]\``, value: 'Display your own or another member\'s high-resolution avatar.' },
                         { name: `\`${p} vote\``, value: 'Support our outpost by voting for the bot on community lists.' },
-                        { name: `\`${p} dog / cat\``, value: 'Summon a random cute dog or cat image. 🐶🐱' },
-                        { name: `\`${p} meme\``, value: 'Get a random fresh meme from Reddit. 🤣' }
+                        { name: `\`${p} dog / cat\``, value: 'Summon a random cute dog or cat image.' },
+                        { name: `\`${p} meme\``, value: 'Get a random fresh meme from Reddit.' }
                     )
                     .setFooter({ text: 'Category: General Commands' });
                 break;
@@ -263,15 +320,19 @@ client.on('interactionCreate', async interaction => {
     }
 
     if (!interaction.isChatInputCommand()) return;
+    
     const command = client.commands.get(interaction.commandName);
     if (!command) return;
 
     const settings = checkDatabase(interaction.guild.id);
     const isRealAdmin = interaction.member ? interaction.member.permissions.has(PermissionFlagsBits.ManageGuild) : false;
     const isCustomAdmin = settings[interaction.guild.id].authorizedUsers.includes(interaction.user.id);
-
-    try { await command.executeSlash(interaction, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); }
-    catch (error) { console.error(error); }
+    
+    try { 
+        await command.executeSlash(interaction, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); 
+    } catch (error) { 
+        console.error(error); 
+    }
 });
 
 // ==================== MESSAGE HANDLER & AFK SYSTEM ====================
@@ -307,24 +368,29 @@ client.on('messageCreate', async message => {
     // Eksekusi Prefix Command biasa
     const originalTrimmed = message.content.trim();
     const contentLower = originalTrimmed.toLowerCase();
+    
     if (!contentLower.startsWith(PREFIX.toLowerCase())) return;
 
     const args = originalTrimmed.slice(PREFIX.length).trim().split(/\s+/);
     if (args.length === 0) return;
+    
     const commandName = args.shift().toLowerCase();
-
     const command = client.commands.get(commandName);
+    
     if (!command) return;
 
     const settings = checkDatabase(message.guild.id);
     const isRealAdmin = message.member ? message.member.permissions.has(PermissionFlagsBits.ManageGuild) : false;
     const isCustomAdmin = settings[message.guild.id].authorizedUsers.includes(message.author.id);
-
+    
     // 🔥 TRIK PEMBAJAKAN UTAMA: Mengubah semua .reply menjadi channel.send otomatis khusus tipe Prefix
     message.reply = (content) => message.channel.send(content);
 
-    try { await command.executePrefix(message, args, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); }
-    catch (error) { console.error(error); }
+    try { 
+        await command.executePrefix(message, args, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin); 
+    } catch (error) { 
+        console.error(error); 
+    }
 });
 
 client.login(process.env.TOKEN);
