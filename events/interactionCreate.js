@@ -1,6 +1,7 @@
 const { Events, PermissionFlagsBits } = require('discord.js');
 const { SETTINGS_FILE } = require('../config');
 const { checkDatabase } = require('../utils/database');
+const { checkCooldown } = require('../utils/cooldown');
 const ticketMenu = require('../interactions/ticketMenu');
 const closeTicket = require('../interactions/closeTicket');
 const suggestionButton = require('../interactions/suggestionButton');
@@ -29,7 +30,13 @@ module.exports = {
         if (!interaction.isChatInputCommand()) return;
 
         const command = client.commands.get(interaction.commandName);
-        if (!command) return;
+        if (!command || !command.executeSlash) return;
+
+        // Cooldown check (3 detik per user per command)
+        const remaining = checkCooldown(interaction.user.id, interaction.commandName, 3);
+        if (remaining) {
+            return interaction.reply({ content: `⏳ Please wait **${remaining}s** before using this command again.`, ephemeral: true });
+        }
 
         const settings    = checkDatabase(interaction.guild.id);
         const isRealAdmin = interaction.member
@@ -40,7 +47,12 @@ module.exports = {
         try {
             await command.executeSlash(interaction, SETTINGS_FILE, settings, isRealAdmin, isCustomAdmin);
         } catch (error) {
-            console.error(error);
+            console.error(`[Slash Error] /${interaction.commandName}:`, error);
+            const errorReply = { content: '❌ Something went wrong while executing this command.', ephemeral: true };
+            try {
+                if (interaction.replied || interaction.deferred) await interaction.followUp(errorReply);
+                else await interaction.reply(errorReply);
+            } catch (_) {}
         }
     }
 };

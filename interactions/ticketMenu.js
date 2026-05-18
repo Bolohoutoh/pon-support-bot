@@ -12,6 +12,15 @@ module.exports = async function ticketMenu(interaction, client) {
     const member = interaction.member;
     const guild  = interaction.guild;
 
+    // Cek apakah user sudah punya ticket terbuka
+    const existingTicket = guild.channels.cache.find(c => c.name === `ticket-${member.user.username}`);
+    if (existingTicket) {
+        return interaction.reply({
+            content: `❌ You already have an open ticket: ${existingTicket}. Please close it first before creating a new one.`,
+            ephemeral: true
+        });
+    }
+
     try {
         const ticketChannel = await guild.channels.create({
             name: `ticket-${member.user.username}`,

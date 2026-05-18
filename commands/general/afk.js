@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { AFK_FILE } = require('../../config');
 
 module.exports = {
     name: 'afk',
@@ -10,7 +11,6 @@ module.exports = {
     },
 
     async handleAFK(ctx, reasonInput, type) {
-        const AFK_FILE = './afk.json';
         if (!fs.existsSync(AFK_FILE)) fs.writeFileSync(AFK_FILE, JSON.stringify({}));
         const afkData = JSON.parse(fs.readFileSync(AFK_FILE, 'utf8'));
         

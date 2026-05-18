@@ -23,7 +23,8 @@ const commands = [
     new SlashCommandBuilder().setName('set').setDescription('Setup features')
         .addSubcommand(sub => sub.setName('wcm').setDescription('Set target welcome channel').addChannelOption(opt => opt.setName('channel').setDescription('Select channel').setRequired(true)))
         .addSubcommand(sub => sub.setName('log').setDescription('Set target log channel for tickets').addChannelOption(opt => opt.setName('channel').setDescription('Select channel').setRequired(true)))
-        .addSubcommand(sub => sub.setName('sug').setDescription('Set target channel for suggestion posts').addChannelOption(opt => opt.setName('channel').setDescription('Select channel').setRequired(true))),
+        .addSubcommand(sub => sub.setName('sug').setDescription('Set target channel for suggestion posts').addChannelOption(opt => opt.setName('channel').setDescription('Select channel').setRequired(true)))
+        .addSubcommand(sub => sub.setName('mod').setDescription('Set target channel for moderation logs').addChannelOption(opt => opt.setName('channel').setDescription('Select channel').setRequired(true))),
 
     new SlashCommandBuilder().setName('wcm').setDescription('Manage welcome GIFs')
         .addSubcommand(sub => sub.setName('gif').setDescription('Add custom Imgur GIF').addStringOption(opt => opt.setName('link').setDescription('Imgur link').setRequired(true)))

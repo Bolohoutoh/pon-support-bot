@@ -2,6 +2,7 @@ const { Events, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const fs = require('fs');
 const { PREFIX, AFK_FILE, SETTINGS_FILE } = require('../config');
 const { checkDatabase, saveSettings } = require('../utils/database');
+const { checkCooldown } = require('../utils/cooldown');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -117,7 +118,15 @@ module.exports = {
 
         const commandName = args.shift().toLowerCase();
         const command = client.commands.get(commandName);
-        if (!command) return;
+        if (!command || !command.executePrefix) return;
+
+        // Cooldown check (3 detik per user per command)
+        const remaining = checkCooldown(message.author.id, commandName, 3);
+        if (remaining) {
+            const cdMsg = await message.channel.send(`⏳ ${message.author}, please wait **${remaining}s** before using this command again.`);
+            setTimeout(() => cdMsg.delete().catch(() => {}), 3000);
+            return;
+        }
 
         // Reuse settings yang sudah di-load di atas
         const guildSettings = settings;
@@ -133,7 +142,8 @@ module.exports = {
         try {
             await command.executePrefix(prefixCtx, args, SETTINGS_FILE, guildSettings, isRealAdmin, isCustomAdmin);
         } catch (error) {
-            console.error(error);
+            console.error(`[Prefix Error] ${commandName}:`, error);
+            message.channel.send('❌ Something went wrong while executing this command.').catch(() => {});
         }
     }
 };
