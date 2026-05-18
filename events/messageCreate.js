@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, EmbedBuilder } = require('discord.js');
 const fs = require('fs');
 
 module.exports = {
@@ -6,27 +6,66 @@ module.exports = {
     async execute(message) {
         if (message.author.bot || !message.guild) return;
 
-        // Load database untuk mengambil list filter kata
+        // Load database
         const SETTINGS_FILE = './serverSettings.json';
         let settings = {};
         if (fs.existsSync(SETTINGS_FILE)) {
             settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
         }
         
-        // Ambil badWords dari database (jika belum ada, jadikan array kosong)
-        const badWords = settings[message.guild.id]?.badWords || [];
+        const guildId = message.guild.id;
+        const badWords = settings[guildId]?.badWords || [];
         const content = message.content.toLowerCase();
+
+        // ==== FUNGSI PENGIRIM LOG AUTOMOD ====
+        const sendAutoModLog = async (reason, originalContent) => {
+            let logChannel;
+            // Cari channel dari setingan modLogChannelId
+            if (settings[guildId]?.modLogChannelId) {
+                logChannel = message.guild.channels.cache.get(settings[guildId].modLogChannelId);
+            }
+            // Jika belum di-set, cari manual
+            if (!logChannel) {
+                logChannel = message.guild.channels.cache.find(c => c.name === 'haven-moderation' || c.name === 'moderation-logs' || c.name === 'mod-logs');
+            }
+
+            if (logChannel) {
+                const now = new Date();
+                const dateStr = `${now.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' })} ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
+
+                // Buat ID Kasus
+                if (!settings[guildId].caseCount) settings[guildId].caseCount = 0;
+                settings[guildId].caseCount += 1;
+                const caseId = settings[guildId].caseCount.toString().padStart(6, '0');
+                fs.writeFileSync(SETTINGS_FILE, JSON.stringify(settings, null, 2));
+
+                const logEmbed = new EmbedBuilder()
+                    .setColor('#ED4245')
+                    .setAuthor({ name: `${message.author.username} | AutoMod`, iconURL: message.author.displayAvatarURL() })
+                    .setDescription(
+                        `**USER**\n${message.author} | ${message.author.username}\n` +
+                        `**STAFF**\nAutoMod\n` +
+                        `**REASON**\n${reason}\n` +
+                        `**MESSAGE CONTENT**\n${originalContent}\n\n` +
+                        `CASE ID: ${caseId} | ${dateStr}`
+                    );
+
+                await logChannel.send({ embeds: [logEmbed] });
+            }
+        };
+        // =====================================
         
         // 1. Filter Kata Dinamis (Berdasarkan Database)
         if (badWords.length > 0) {
-            // Mengecek apakah pesan mengandung salah satu kata di database
             const hasBadWord = badWords.some(word => content.includes(word.toLowerCase()));
             if (hasBadWord) {
                 await message.delete().catch(() => {});
                 const warningMsg = await message.channel.send(`⚠️ ${message.author}, please mind your language!`);
-                // Hilangkan pesan bot setelah 5 detik
                 setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
-                return; // Stop eksekusi agar tidak mendeteksi filter lain
+                
+                // Kirim log ke channel moderation
+                await sendAutoModLog('Triggered Word Filter', message.content);
+                return; 
             }
         }
 
@@ -36,6 +75,9 @@ module.exports = {
             await message.delete().catch(() => {});
             const warningMsg = await message.channel.send(`🔗 ${message.author}, sending links is not allowed in this server!`);
             setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
+            
+            // Kirim log ke channel moderation
+            await sendAutoModLog('Posted a Link', message.content);
             return;
         }
 
@@ -43,10 +85,13 @@ module.exports = {
         if (message.content.length > 15) {
             const capsCount = message.content.replace(/[^A-Z]/g, '').length;
             const capsPercentage = (capsCount / message.content.length) * 100;
-            if (capsPercentage > 70) {
+            if (capsPercentage > 70 && !message.member.permissions.has('ManageMessages')) {
                 await message.delete().catch(() => {});
                 const warningMsg = await message.channel.send(`🔠 ${message.author}, please turn off your Caps Lock!`);
                 setTimeout(() => warningMsg.delete().catch(() => {}), 5000);
+                
+                // Kirim log ke channel moderation
+                await sendAutoModLog('Excessive Caps Lock', message.content);
                 return;
             }
         }
