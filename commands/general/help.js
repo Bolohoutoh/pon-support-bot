@@ -13,7 +13,7 @@ module.exports = {
 
     async sendHelpMenu(ctx, type) {
         // Membaca file emoji kustom terpisah
-        const emojisPath = path.join(__dirname, '../emojis.json');
+        const emojisPath = path.join(__dirname, '../../emojis.json');
         let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠️' };
         if (fs.existsSync(emojisPath)) {
             emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
