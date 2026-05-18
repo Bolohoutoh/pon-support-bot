@@ -48,8 +48,6 @@ module.exports = async function helpMenu(interaction) {
                 .addFields(
                     { name: `\`${p} afk [reason]\``, value: 'Set your status to Away From Keyboard (AFK).' },
                     { name: `\`${p} info\``, value: 'View bot statistics, current ping, and system uptime.' },
-                    { name: `\`${p} avatar [user]\``, value: 'Display your own or another member\'s high-resolution avatar.' },
-                    { name: `\`${p} vote\``, value: 'Support our outpost by voting for the bot on community lists.' },
                     { name: `\`${p} dog / cat\``, value: 'Summon a random cute dog or cat image.' },
                     { name: `\`${p} meme\``, value: 'Get a random fresh meme from Reddit.' }
                 )
@@ -81,7 +79,9 @@ module.exports = async function helpMenu(interaction) {
                 .setDescription('Core configuration tools for advanced bot access modules:')
                 .addFields(
                     { name: `\`${p} access add / rmv [@user]\``, value: 'Grant or revoke custom admin permissions to run bot commands.' },
-                    { name: `\`${p} access list\``, value: 'Display all authorized custom bot administrators.' }
+                    { name: `\`${p} access list\``, value: 'Display all authorized custom bot administrators.' },
+                    { name: `\`${p} warn @user [reason]\``, value: 'Warn a user. 3 warnings = auto-mute 3 days.' },
+                    { name: `\`${p} word add/rmv/list [word]\``, value: 'Manage the automod word filter list.' }
                 )
                 .setFooter({ text: 'Category: Support & Utilities (Admin Only)' });
             break;

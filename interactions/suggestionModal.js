@@ -1,8 +1,7 @@
 const {
     EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle
 } = require('discord.js');
-const fs = require('fs');
-const { SETTINGS_FILE } = require('../config');
+const { checkDatabase } = require('../utils/database');
 
 /**
  * Handler modal suggestion_modal — kirim suggestion ke channel target
@@ -11,7 +10,7 @@ const { SETTINGS_FILE } = require('../config');
 module.exports = async function suggestionModal(interaction) {
     const suggestionText = interaction.fields.getTextInputValue('suggestion_text');
     const guildId = interaction.guild.id;
-    const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+    const settings = checkDatabase(guildId);
     const targetChannelId = settings[guildId]?.suggestionChannelId;
     const targetChannel = targetChannelId
         ? interaction.guild.channels.cache.get(targetChannelId)

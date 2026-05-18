@@ -1,16 +1,23 @@
 const { EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const fs = require('fs');
-const { SETTINGS_FILE } = require('../config');
+const { checkDatabase } = require('../utils/database');
 
 /**
  * Handler tombol close_ticket — menyimpan transcript & menghapus channel ticket.
  */
 module.exports = async function closeTicket(interaction) {
     try {
-        await interaction.reply('🔒 Securing data logs and dismantling channel in 5 seconds...');
         const channel = interaction.channel;
+
+        // Hanya pembuat ticket atau admin yang bisa close
+        const isTicketOwner = channel.name.includes(interaction.user.username.toLowerCase());
+        const isAdmin = interaction.member.permissions.has('ManageChannels');
+        if (!isTicketOwner && !isAdmin) {
+            return interaction.reply({ content: '❌ Only the ticket creator or an admin can close this ticket.', ephemeral: true });
+        }
+
+        await interaction.reply('🔒 Securing data logs and dismantling channel in 5 seconds...');
         const guildId = interaction.guild.id;
-        const settings = JSON.parse(fs.readFileSync(SETTINGS_FILE, 'utf8'));
+        const settings = checkDatabase(guildId);
         const logChannelId = settings[guildId]?.logChannelId;
 
         const messages = await channel.messages.fetch({ limit: 100 });
