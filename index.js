@@ -68,7 +68,7 @@ function checkDatabase(guildId) {
 
 // ==================== INTERACTION HANDLER ====================
 client.on('interactionCreate', async interaction => {
-    
+
     // PENANGANAN MENU TICKET
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_menu') {
         const reason = interaction.values[0];
@@ -181,7 +181,7 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isStringSelectMenu() && interaction.customId === 'help_menu') {
         const selection = interaction.values[0];
         const embed = new EmbedBuilder().setTimestamp();
-        const p = PREFIX; 
+        const p = PREFIX;
 
         // Membaca database emoji kustom
         const emojisPath = path.join(__dirname, 'emojis.json');
@@ -205,9 +205,9 @@ client.on('interactionCreate', async interaction => {
                     .setDescription('Welcome Explorer! Select a category from the dropdown menu below to view available commands and server configurations.')
                     .addFields(
                         { name: `${emojis.help_general || '🧭'} General`, value: 'Basic bot interactions, user utilities, and AFK systems.', inline: true },
-                        { name: `${emojis.help_profile || '👤'} Profile`, value: 'View player statistics, titles, badges, and server rank. *(Coming Soon)*', inline: true },
-                        { name: `${emojis.help_management || '🧱'} Ch Management & Welcome`, value: 'Tools for channel, role, locks, and custom greetings setup.', inline: true },
-                        { name: `${emojis.help_support || '🛠️'} Support & Utilities`, value: 'Setup support tickets, community suggestions, and bot access.', inline: true }
+                        { name: `${emojis.help_profile || '👤'} Profile`, value: 'View player statistics, titles, badges, gamble and games. *(Coming Soon)*', inline: true },
+                        { name: `${emojis.help_management || '🧱'} Ch Management & Welcome`, value: 'Tools for channel, role, locks, custom greetings, logs, and suggestions.', inline: true },
+                        { name: `${emojis.help_support || '🛠️'} Support & Utilities`, value: 'Configure custom bot access and administrator rights.', inline: true }
                     )
                     .setFooter({ text: 'Pioneer Support • Choose a category below' });
                 break;
@@ -235,10 +235,11 @@ client.on('interactionCreate', async interaction => {
             case 'help_management':
                 embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_management, '🧱')} CH MANAGEMENT & WELCOME SETUP`)
-                    .setDescription('Configuration commands to control, structure channels, and setup greetings:')
+                    .setDescription('Configuration commands to control, structure channels, setup greetings, and logs:')
                     .addFields(
                         { name: '🧱 Channel & Role Management', value: `\`${p} crt cha [name]\` - Create text channel.\n\`${p} crt cat [name]\` - Create category folder.\n\`${p} crt role [hex] [name]\` - Create custom colored role.\n\`${p} rmv [cha/cat/role]\` - Delete channel/category/role.\n\`${p} rmv msg [amount]\` - Clear chat messages.\n\`${p} lock / unlock [channel]\` - Toggle channel locks.\n\`${p} slowmode [channel] [seconds]\` - Set slowmode cooldown.` },
-                        { name: '👋 Welcome Greeting Configurations', value: `\`${p} set wcm [#channel]\` - Set target welcome channel.\n\`${p} wcm gif [imgur_link]\` - Pool custom background Imgur GIF.\n\`${p} wcm list\` - View registered welcome GIFs.\n\`${p} wcm rmv [num]\` - Remove custom GIF from database.` }
+                        { name: '👋 Welcome Greeting Configurations', value: `\`${p} set wcm [#channel]\` - Set target welcome channel.\n\`${p} wcm gif [imgur_link]\` - Pool custom background Imgur GIF.\n\`${p} wcm list\` - View registered welcome GIFs.\n\`${p} wcm rmv [num]\` - Remove custom GIF from database.` },
+                        { name: '📝 Ticket & Suggestion Logs', value: `\`${p} set log [#channel]\` - Set archive log channel for closed tickets.\n\`${p} set sug [#channel]\` - Set community suggestion channel.\n\`${p} suggestion\` - Deploy Suggestion Embed Panel.` }
                     )
                     .setFooter({ text: 'Category: Management & Welcome (Admin Only)' });
                 break;
@@ -246,12 +247,9 @@ client.on('interactionCreate', async interaction => {
             case 'help_support':
                 embed.setColor('#2F3136')
                     .setTitle(`${getEmoji(emojis.help_support, '🛠️')} SUPPORT & UTILITIES PANEL`)
-                    .setDescription('Core configuration tools for advanced system modules:')
+                    .setDescription('Core configuration tools for advanced bot access modules:')
                     .addFields(
-                        { name: `\`${p} set log [#channel]\``, value: 'Set the secure archive log channel for closed tickets.' },
-                        { name: `\`${p} set sug [#channel]\``, value: 'Set the main display channel for community suggestion logs.' },
-                        { name: `\`${p} suggestion\``, value: 'Deploy the automated, click-to-submit Suggestion Embed Panel.' },
-                        { name: `\`${p} access add / rmv [@user]\``, value: 'Grant or revoke custom custom admin permissions to run bot commands.' },
+                        { name: `\`${p} access add / rmv [@user]\``, value: 'Grant or revoke custom admin permissions to run bot commands.' },
                         { name: `\`${p} access list\``, value: 'Display all authorized custom bot administrators.' }
                     )
                     .setFooter({ text: 'Category: Support & Utilities (Admin Only)' });

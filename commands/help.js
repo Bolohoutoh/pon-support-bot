@@ -14,7 +14,7 @@ module.exports = {
     async sendHelpMenu(ctx, type) {
         // Membaca file emoji kustom terpisah
         const emojisPath = path.join(__dirname, '../emojis.json');
-        let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠' };
+        let emojis = { help_main: '🏕️', help_general: '🧭', help_profile: '👤', help_management: '🧱', help_support: '🛠️' };
         if (fs.existsSync(emojisPath)) {
             emojis = JSON.parse(fs.readFileSync(emojisPath, 'utf8'));
         }
@@ -31,14 +31,14 @@ module.exports = {
 
         // EMBED UTAMA (Teks bebas pakai format lengkap)
         const mainEmbed = new EmbedBuilder()
-            .setColor('#77B255')
+            .setColor('#2F3136') // 🔥 WARNA SUDAH DIUBAH KE DARK MODE DISCORD
             .setTitle('🏕️ PIONEER OUTPOST HELP PANEL')
             .setDescription('Welcome Explorer! Select a category from the dropdown menu below to view available commands and server configurations.')
             .addFields(
                 { name: `${emojis.help_general || '🧭'} General`, value: 'Basic bot interactions, user utilities, and AFK systems.', inline: true },
-                { name: `${emojis.help_profile || '👤'} Profile`, value: 'View player statistics, titles, badges, and server rank. *(Coming Soon)*', inline: true },
-                { name: `${emojis.help_management || '🧱'} Ch Management & Welcome`, value: 'Tools for channel, role, locks, and custom greetings setup.', inline: true },
-                { name: `${emojis.help_support || '🛠️'} Support & Utilities`, value: 'Setup support tickets, community suggestions, and bot access.', inline: true }
+                { name: `${emojis.help_profile || '👤'} Profile`, value: 'View player statistics, titles, badges, gamble and games. *(Coming Soon)*', inline: true },
+                { name: `${emojis.help_management || '🧱'} Ch Management & Welcome`, value: 'Tools for channel, role, locks, custom greetings, logs, and suggestions.', inline: true },
+                { name: `${emojis.help_support || '🛠️'} Support & Utilities`, value: 'Configure custom bot access and administrator rights.', inline: true }
             )
             .setFooter({ text: 'Pioneer Support • Choose a category below' })
             .setTimestamp();
@@ -68,13 +68,13 @@ module.exports = {
                 },
                 {
                     label: 'Ch Management & Welcome',
-                    description: 'Manage channels, roles, locks, and welcome setup',
+                    description: 'Manage channels, roles, locks, welcome setup, and logs',
                     value: 'help_management',
                     emoji: getComponentEmoji(emojis.help_management || '🧱')
                 },
                 {
                     label: 'Support & Utilities',
-                    description: 'Configure tickets, suggestions, and admin rights',
+                    description: 'Configure custom bot access and admin rights',
                     value: 'help_support',
                     emoji: getComponentEmoji(emojis.help_support || '🛠️')
                 }
